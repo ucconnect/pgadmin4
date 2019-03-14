@@ -11,6 +11,11 @@
 # Node-8 is supported by all needed C++ packages
 FROM node:8 AS node-builder
 
+#Q:20190314 {
+RUN set -ex; \
+    mkdir -p /pgadmin4/web;
+# }
+
 COPY ./pgadmin4/web/ /pgadmin4/web/
 WORKDIR /pgadmin4/web
 
@@ -96,7 +101,7 @@ RUN python -O -m compileall /pgadmin4
 VOLUME /var/lib/pgadmin
 EXPOSE 80 443
 
-#Q:20190313: Setup for non-root access {
+#Q:20190314: Setup for non-root access {
 ARG DOCKER_UID=1000
 ARG DOCKER_GID=1000
 
