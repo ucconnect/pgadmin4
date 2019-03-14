@@ -96,4 +96,36 @@ RUN python -O -m compileall /pgadmin4
 VOLUME /var/lib/pgadmin
 EXPOSE 80 443
 
+#Q:20190313: Setup for non-root access {
+ARG DOCKER_UID=1000
+ARG DOCKER_GID=1000
+
+RUN set -ex; \
+    echo "# Checking user and privileges {"; \
+    dockerUID1=`id -u docker 2>/dev/null`; \
+    dockerGID1=`id -g docker 2>/dev/null`; \
+    if [ -z `grep -E "^docker:" /etc/group`]; then \
+        echo "## Creating docker group with GID: ${DOCKER_GID}"; \
+        addgroup -g ${DOCKER_GID} docker; \
+    fi; \
+    if [ ! -z "${dockerUID1}" ]; then \
+        echo "## Existing docker user: $(id docker)"; \
+        DOCKER_UID="${dockerUID1}"; \
+    else \
+        echo "## Creating docker user with UID: ${DOCKER_UID}"; \
+        adduser -u ${DOCKER_UID} -G docker,root -m docker; \
+    fi; \
+    echo '%docker ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers; \
+    chown -R docker:root /pgadmin4; \
+    chmod ug+w /pgadmin4; \
+    chown -R docker:root /var/lib/pgadmin; \
+    chmod ug+w /var/lib/pgadmin; \
+    chown -R docker:root /var/log/pgadmin; \
+    chmod ug+w /var/log/pgadmin; \
+    echo "# }";
+    
+USER ${DOCKER_UID}
+
+# }
+
 ENTRYPOINT ["/entrypoint.sh"]
